@@ -172,7 +172,7 @@ Schema:
 * **client_id** [String, required]: Client ID of the service principal.
 * **client_secret** [String, required]: Client secret of the service principal.
 * **resource\_group\_name** [String, required]: Resource group name.
-* **storage\_account\_name** [String, optional]: Storage account name. It will be used as a default storage account for VM disks and stemcells. If `use_managed_disks` is `false`, `storage_account_name` is required. Otherwise, `storage_account_name` is optional.
+* **storage\_account\_name** [String, optional]: Storage account name. **It must be a Standard storage account.** It will be used as a default storage account for VM disks and stemcells. If `use_managed_disks` is `false`, `storage_account_name` is required. Otherwise, `storage_account_name` is optional.
 * **ssh_user** [String, required]: SSH username. Default: `vcap`.
 * **ssh\_public\_key** [String, required]: SSH public key.
 * **default\_security\_group** [String, required]: Name of the default [security group](https://azure.microsoft.com/en-us/documentation/articles/virtual-networks-nsg/) that will be applied to all created VMs.
