@@ -74,5 +74,5 @@ When using Storage Accounts, encryption keys can be managed through the [Azure K
 
 | Feature | Support |
 | ------- | ------- |
-| Multi-CPI | Not Supported |
+| Multi-CPI | Supported |
 | Native Disk Resize | Not Supported |
