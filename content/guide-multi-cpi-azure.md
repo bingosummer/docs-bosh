@@ -10,8 +10,11 @@ Let's start by initializing main AZ (`z1`) to `West Europe` by following steps 1
 
 To add a second AZ (`z2`) to `East US 2` you need to perform the following actions with another Azure service principals.
 
-* Create a Virtual Network (10.1.16.0/20)
-* Create and configure network security groups if needed
+* Create a Virtual Network  named "boshvnet-crp"(10.1.16.0/20).
+* Create a Subnet named "CloudFoundry" in Virtual Network "boshvnet-crp".
+* Create a network security group named "nsg-cf", and configure it if needed.
+
+**Note**: the name of the resource can be changed, but you need to ensure the name of the resource is consistent with the cloud config.
 
 ---
 ## Connecting Virtual Network {: #connecting-vnets }
@@ -21,7 +24,7 @@ The VMs in one AZ need to be able to talk to VMs in the other AZ. You will need 
 ---
 ## Configure CPI and Cloud configs {: configuring-configs }
 
-Now that the IaaS is configured, update your Director's [CPI config](cpi-config.md):
+Now that the IaaS is configured, update your Director's [CPI config](cpi-config.md). Create a new file `cpi.yml` and copy following content to it, substitute variables enclosed by double brackets with your credentials. The `ssh.public_key` can be found in `bosh-deployment-vars.yml` if you use Azure template creating your Director.
 
 ```yaml
 cpis:
@@ -59,6 +62,8 @@ And cloud config:
 
 !!! note
     The `azs` section of your `cloud-config` now contains the `cpi` key with available values that are defined in your `cpi-config`.
+
+Use following content to replace `azs` and `networks` field in previous cloud config.  
 
 ```yaml
 azs:
