@@ -113,6 +113,8 @@ Schema for `cloud_properties` section:
     * For Azure, the default value of an unmanaged availability set is `3`. The default value of a managed availability set is `2`, because [some regions don't support 3 fault domains for now](https://docs.microsoft.com/en-us/azure/virtual-machines/virtual-machines-windows-manage-availability#configure-multiple-virtual-machines-in-an-availability-set-for-redundancy)
     * For Azure Stack, the default value is `1`. Before 1802 update, only `1` is allowed. After [1802 update](https://docs.microsoft.com/en-us/azure/azure-stack/azure-stack-update-1802), you can configure up to 3 fault domains.
 
+* **managed_identity** [Hash, optional]: [Managed identity](https://github.com/cloudfoundry/bosh-azure-cpi-release/tree/master/docs/advanced/managed-identity) that will be applied to VMs. Available in v35.5.0+.
+
 * **storage\_account\_name** [String, optional]: Storage account for VMs. Valid only when `use_managed_disks` is `false`. If this is not set, the VMs will be created in the default storage account. See [this document](https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/tree/master/docs/advanced/deploy-cloudfoundry-for-enterprise#multiple-storage-accounts) for more details on why this option exists.
     * If you use `DS-series` or `GS-series` as `instance_type`, you should set this to a premium storage account. See more information about [Azure premium storage](https://azure.microsoft.com/en-us/documentation/articles/storage-premium-storage-preview-portal/). See [avaliable regions](http://azure.microsoft.com/en-us/regions/#services) where you can create premium storage accounts.
     * If you use a different storage account which must be in the same resource group, please make sure:
@@ -224,17 +226,20 @@ disk_types:
 Schema:
 
 * **environment** [String, required]: Azure environment name. Possible values are: `AzureCloud`, `AzureChinaCloud`, `AzureUSGovernment` (available in v19+), `AzureGermanCloud` (available in v22+) or `AzureStack`.
-* **location** [String, optional]: Azure region name. Only required when [`vm_resources`](https://bosh.io/docs/manifest-v2.html#instance-groups) is specified in the deployment manifest. Available in v33+.
 * **subscription_id** [String, required]: Subscription ID.
+* **credentials_source** [String, optional]: Selects credentials source between credentials provided in this configuration, or from a [managed identity](https://github.com/cloudfoundry/bosh-azure-cpi-release/tree/master/docs/advanced/managed-identity). Default: `static`. Available in v35.5.0+.
 * **tenant_id** [String, required]: Tenant ID of the service principal.
 * **client_id** [String, required]: Client ID of the service principal.
 * **client_secret** [String, optional]: Client secret of the service principal.
 * **certificate** [String, optional]: The certificate for your service principal. Azure CPI v35.0.0+ supports the [service principal with a certificate](https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/tree/master/docs/advanced/use-service-principal-with-certificate). Only one of `client_secret` and `certificate` can be specified.
+* **default\_managed\_identity** [Hash, optional]: Default [managed identity](https://github.com/cloudfoundry/bosh-azure-cpi-release/tree/master/docs/advanced/managed-identity) that will be applied to all created VMs. Available in v35.5.0+.
 * **resource\_group\_name** [String, required]: Resource group name.
+* **use\_managed\_disks** [Boolean, optional]: Enable managed disks. The default value is `false`. For `AzureCloud`, the option is supported in v21+. For `AzureChinaCloud`, `AzureUSGovernment`, and `AzureGermanCloud`, the option is supported in v26+. For `AzureStack`, the option is not yet supported.
 * **storage\_account\_name** [String, optional]: Storage account name. It will be used as a default storage account for VM disks and stemcells. If `use_managed_disks` is `false`, `storage_account_name` is required. Otherwise, `storage_account_name` is optional.
 * **ssh_user** [String, required]: SSH username. Default: `vcap`.
 * **ssh\_public\_key** [String, required]: SSH public key.
 * **default\_security\_group** [String, optional]: See description under [networks](https://bosh.io/docs/azure-cpi/#networks). This property is required before v35.0.0, and optional in v35.0.0+.
+* **location** [String, optional]: Azure region name. Only required when [`vm_resources`](https://bosh.io/docs/manifest-v2.html#instance-groups) is specified in the deployment manifest. Available in v33+.
 * **azure_stack** [Hash, optional]: [Configration for AzureStack](https://github.com/cloudfoundry-incubator/bosh-azure-cpi-release/tree/master/docs/advanced/azure-stack). Available in v23+.
     * **domain** [String, optional]: The domain for your AzureStack deployment. Default is `local.azurestack.external`. You can use the default value for [Azure Stack development kit](https://azure.microsoft.com/en-us/overview/azure-stack/development-kit/). To get this value for Azure Stack integrated systems, contact your service provider.
     * **authentication** [String, optional]: The authentication type for your AzureStack deployment. Possible values are: `AzureAD`, `AzureChinaCloudAD` and `ADFS`. You need to specify `certificate` if you select `ADFS`, because Azure Stack with ADFS authentication only supports the service principal with a certificate.
@@ -246,11 +251,10 @@ Schema:
         * The property is required for v35.0.0+.
         * For the versions from v27 to v34, if `ca_cert` is not provided, the `skip_ssl_validation` and `use_http_to_access_storage_account` must be set to `true`.
 * **parallel\_upload\_thread\_num** [Integer, optional]: The number of threads to upload stemcells in parallel. The default value is 16.
+* **pip\_idle\_timeout\_in\_minutes** [Integer, optional]: Set idle timeouts in minutes for dynamic public IPs. It must be in the range [4, 30]. The default value is 4. It is only used when **assign\_dynamic\_public\_ip** is set to `true` in **resouce_pool**. Available in V24+.
 * **debug_mode** [Boolean, optional]: Enable debug mode. The default value is `false`. When `debug_mode` is `true`:
     * CPI will log all raw HTTP requests/responses.
     * For Azure CPI v26~v35.1.0, the new created VMs (only for VMs in same region with `storage_account_name` specified in [Global Configuration](https://bosh.io/docs/azure-cpi.html#global)) will have [boot diagnostics](https://azure.microsoft.com/en-us/blog/boot-diagnostics-for-virtual-machines-v2/) enabled. **Note**: For Azure CPI v35.2.0+, VM boot diagnostics will NOT be configured by `debug_mode` any more, it will be configured by `enable_vm_boot_diagnostics`.
-* **use\_managed\_disks** [Boolean, optional]: Enable managed disks. The default value is `false`. For `AzureCloud`, the option is supported in v21+. For `AzureChinaCloud`, `AzureUSGovernment`, and `AzureGermanCloud`, the option is supported in v26+. For `AzureStack`, the option is not yet supported.
-* **pip\_idle\_timeout\_in\_minutes** [Integer, optional]: Set idle timeouts in minutes for dynamic public IPs. It must be in the range [4, 30]. The default value is 4. It is only used when **assign\_dynamic\_public\_ip** is set to `true` in **resouce_pool**. Available in V24+.
 * **keep\_failed\_vms** [Boolean, optional]: A flag to keep the failed VM. If it's set to `true` and CPI fails to **provision** the VM, CPI will keep the VM for troubleshooting. The default value is `false`. Available in v32+. Please note that the option is different from **keep\_unreachable\_vms** of the [director configuration](https://bosh.io/jobs/director?source=github.com/cloudfoundry/bosh). The latter is to keep the VM whose BOSH agent is unresponsive.
 * **enable_telemetry** [Boolean, optional]: A flag to enable telemetry on CPI calls on Azure. Available since v35.2.0. The default value is `true` in v35.2.0, and is `false` in v35.3.0+.
 * **enable\_vm\_boot\_diagnostics** [Boolean, optional]: A flag to enable VM boot diagnostics on Azure. Available since v35.2.0. The default value is `true` in v35.2.0, and is `false` in v35.3.0+.
