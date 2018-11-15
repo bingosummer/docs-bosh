@@ -75,8 +75,9 @@ Schema for `cloud_properties` section:
 * **instance_type** [String, required]: Type of the [instance](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-linux-sizes/). Example: `Standard_A2`. [Basic Tier Virtual Machines](https://azure.microsoft.com/en-us/blog/basic-tier-virtual-machines-2/) should not be used if you need to bind the instance to Azure Load Balancer (ALB), because Basic Tier VM doesn't support ALB.
 * **root_disk** [Hash, optional]: OS disk of custom size.
     * **size** [Integer, optional]: Specifies the disk size in MiB.
-        * The size must be greater than 3 * 1024 and less than the max disk size for [unmanaged](https://azure.microsoft.com/en-us/pricing/details/storage/unmanaged-disks/) or [managed](https://azure.microsoft.com/en-us/pricing/details/managed-disks/) disk. Please always use `N * 1024` as the size because Azure always uses GiB but not MiB.
-        * It has a default value `30 * 1024` only when ephemeral_disk.use\_root\_disk is set to true.
+        * The size must be greater than `3 * 1024` and less than the max disk size for [unmanaged](https://azure.microsoft.com/en-us/pricing/details/storage/unmanaged-disks/) or [managed](https://azure.microsoft.com/en-us/pricing/details/managed-disks/) disk. Please always use `N * 1024` as the size because Azure always uses GiB but not MiB.
+        * It has a default value `30 * 1024` only when `ephemeral_disk.use\_root\_disk` is set to true.
+    * **type** [String, optional]: Specifies the disk type. Possible values: `Standard_LRS`, `StandardSSD_LRS` and `Premium_LRS`. The type can be specified as follows, ordered by greatest precedence: `root_disk.type`, followed by `storage\_account\_type`. If no one is specified, `Premium_LRS` will be used when its `instance_type` supports premium storage, otherwise, `Standard_LRS` will be used. Available in v35.5.0+.
 * **caching** [String, optional]: Type of the disk caching of the VMs' OS disks. It can be either `None`, `ReadOnly` or `ReadWrite`. Default is `ReadWrite`.
 * **ephemeral_disk** [Hash, optional]: Ephemeral disk to apply for all VMs that are in this VM type/extension. By default a data disk with the default size as below will be created as the ephemeral disk.
     * **use\_root\_disk** [Boolean, optional]: Enable to use OS disk to store the ephemeral data. The default value is false. When it is true, ephemeral_disk.size will not be used.
@@ -84,6 +85,7 @@ Schema for `cloud_properties` section:
         * If the Azure temporary disk size for the instance type is less than `30*1024` MiB, the default size is `30*1024` MiB because the space may not be enough.
         * If the Azure temporary disk size for the instance type is larger than `1000*1024` MiB, the default size is `1000*1024` MiB because it is not expected to use such a large ephemeral disk in CF currently.
         * Otherwise, the Azure temporary disk size will be used as the default size. See more information about [Azure temporary disk size](https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-linux-sizes/).
+    * **type** [String, optional]: Specifies the disk type. Possible values: `Standard_LRS`, `StandardSSD_LRS` and `Premium_LRS`. Available in v35.5.0+.
 
 * **load_balancer** [String, optional]: Name of a [load balancer](https://azure.microsoft.com/en-us/documentation/articles/load-balancer-overview/) the VMs should belong to. You need to create the load balancer manually before configuring it. Notes:
     * [Basic Tier Virtual Machines](https://azure.microsoft.com/en-us/blog/basic-tier-virtual-machines-2/) (Example: `Basic_A1`) doesn't support Azure Load Balancer.
@@ -131,7 +133,7 @@ Schema for `cloud_properties` section:
         1. The default number of disks limitation is 30 but you can specify it in **storage\_account\_max\_disk\_number**.
 * **storage\_account\_type** [String, optional]: Storage account type. You can click [**HERE**](http://azure.microsoft.com/en-us/pricing/details/storage/) to learn more about the type of Azure storage account.
     * When `use_managed_disks` is `true`, the root disk's type is specified by this property. It can be either `Standard_LRS` or `Premium_LRS`. If not specified, `Premium_LRS` will be used when its `instance_type` supports premium storage, otherwise, `Standard_LRS` will be used.
-    * When `use_managed_disks` is `false`, the newly-created storage account's type is specified by this property. It can be either `Standard_LRS`, `Standard_ZRS`, `Standard_GRS`, `Standard_RAGRS` or `Premium_LRS`. It's required if the storage account does not exist.
+    * When `use_managed_disks` is `false`, the newly-created storage account's type is specified by this property. It can be either `Standard_LRS`, `Standard_ZRS`, `Standard_GRS`, `Standard_RAGRS` or `Premium_LRS`. It's ***REQUIRED* if the storage account does not exist.
 * **storage\_account\_max\_disk\_number** [Integer, optional]: Number of disks limitation in a storage account. Valid only when `use_managed_disks` is `false`. Default value is 30. This will be used only when **storage\_account\_name** is a pattern.
     * Every storage account has a limitation to host disks. You may hit the performance issue if you create too many disks in one storage account.
     * The maximum number of disks of a standard storage account is 40 because the maximum IOPS of a standard storage account is 20,000 and the maximum IOPS of a standard disk is 500.
